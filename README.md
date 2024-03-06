@@ -13,7 +13,7 @@ cd votre_projet
 Créez et activez un environnement virtuel (optionnel) :
 ```bash
 python -m venv env
-`env\Scripts\activate`
+env\Scripts\activate
 ```
 
 Installez les dépendances nécessaires :
