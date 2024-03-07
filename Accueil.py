@@ -1,4 +1,6 @@
 import streamlit as st
+import numpy as np 
+import cv2
 
 st.set_page_config(
     page_title="Accueil - Détection d'armes",
