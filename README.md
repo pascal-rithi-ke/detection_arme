@@ -1,5 +1,9 @@
 # Détection d'armes
 
+Cette application permet de détecter les armes dans une image ou une vidéo.
+Elle utilise un modèle de détection d'objets pré-entraîné sur un jeu de données.
+L'application est développée avec [Streamlit](https://streamlit.io/).
+
 ## Installation
 
 Avant de lancer l'application, assurez-vous que vous avez Python (minimum 3.8) d'installé.
