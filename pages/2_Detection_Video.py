@@ -2,7 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 
-net = cv2.dnn.readNet("test/yolov3.weights", "test/yolov3.cfg")
+net = cv2.dnn.readNet("dataset/yolov3.weights", "dataset/yolov3.cfg")
 
 classes = ["Knife", "Pistol", "Rifle"]
 
@@ -46,25 +46,20 @@ def perform_detection(frame):
                 cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
                 label = f"{classes[class_id]}: {confidence:.2f}"
                 cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
     return frame
 
 # Afficher la vidéo avec les détections
 if upload_video is not None:
     video_file = st.video(upload_video)
     video_capture = cv2.VideoCapture(upload_video.name)  # Utiliser l'attribut filename
-
     while video_capture.isOpened():
         ret, frame = video_capture.read()
-
         if not ret:
             break
-
-        # Effectuer la détection d'objets sur la frame actuelle
-        frame_with_detections = perform_detection(frame)
-
-        # Afficher la frame avec les détections
-        st.image(frame_with_detections, channels="BGR")
-
-    # Fermer la capture vidéo à la fin de la lecture
+        frame = perform_detection(frame)
+        st.image(frame, channels="BGR")
     video_capture.release()
+    
+# Afficher un message d'erreur si aucune vidéo n'est chargée
+else:
+    st.warning("Veuillez choisir une vidéo")
