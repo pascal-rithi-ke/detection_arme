@@ -23,6 +23,13 @@ upload_video = st.file_uploader("Choisissez une vidéo", type=["mp4", "avi", "mo
 # Définir la confiance minimale pour l'affichage de la détection
 min_confidence = st.slider("Confiance minimale", 0.0, 1.0, 0.5)
 
+# Définir les coordonnées du rectangle (x, y, largeur, hauteur)
+#rectangle_coordinates = st.text_input("Coordonnées du rectangle (x, y, largeur, hauteur)", "100, 100, 100, 100")
+rectangle_coordinates = ("100, 100, 100, 100")
+rectangle_coordinates = [int(coord) for coord in rectangle_coordinates.split(",")]
+
+frame_container = st.empty()
+
 # Si une vidéo est uploadée
 if upload_video is not None:
     # Créer une copie temporaire de la vidéo
@@ -37,50 +44,21 @@ if upload_video is not None:
     total_frames = int(video_clip.fps * video_clip.duration)
     st.write(f"Nombre total de frames : {total_frames}")
 
-    # Ajouter un slider pour choisir le nombre de frames à afficher
-    #num_frames = st.slider("Nombre de frames à afficher", 1, total_frames, 1)
-
-    # Créer un élément Streamlit pour afficher la vidéo
-    video_placeholder = st.empty()
-
-    for i in range(total_frames):
+    # Lire la vidéo frame par frame
+    for i in range(1, total_frames + 1):
         # Récupérer la frame
         frame = video_clip.get_frame(i / video_clip.fps)
 
-        # Effectuer la détection d'objet
-        blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
-        net.setInput(blob)
-        outs = net.forward(net.getUnconnectedOutLayersNames())
+        # Convertir la frame en UMat
+        frame = cv2.UMat(np.array(frame))
 
-        # Process YOLO output
-        for out in outs:
-            for detection in out:
-                scores = detection[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
+        # Dessiner le rectangle sur la frame
+        x, y, w, h = rectangle_coordinates
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        cv2.putText(frame, "Weapon", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        cv2.putText(frame, f"Frame {i}", (100, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-                if confidence > min_confidence:
-                    # Extract detection details
-                    center_x = int(detection[0] * frame.shape[1])
-                    center_y = int(detection[1] * frame.shape[0])
-                    width = int(detection[2] * frame.shape[1])
-                    height = int(detection[3] * frame.shape[0])
-
-                    x = int(center_x - width / 2)
-                    y = int(center_y - height / 2)
-
-                    # Draw a box and label on the frame
-                    cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
-
-                    # Get the class name from the list
-                    class_name = classes[class_id]
-
-                    # Add class name to label
-                    label = f"{class_name}: {confidence:.2f}"
-                    cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-        # Afficher la vidéo dans Streamlit avec le rectangle superposé
-        video_placeholder.image(frame, channels="RGB", caption=f"Frame {i + 1}")
+        frame_container.image(frame.get(), channels="BGR")
 
     if video_clip:
         video_clip.close()
