@@ -43,3 +43,5 @@ streamlit run Accueil.py
 Ouvrez votre navigateur et allez à l'adresse http://localhost:8501 pour voir l'application.
 
 Pour quitter, appuyez sur `Ctrl + C` dans votre terminal. Vous pouvez quitter l'environnement virtuel avec la commande `deactivate`.
+
+PS: Le dossier " Weapons.v2i.multiclass " est sur teams en format .ZIP

@@ -1,6 +1,9 @@
 Dataset Info
 *video_test
 dataset_yolo/yolov3.weights
+Weapons.v2i.multiclass/test/
+Weapons.v2i.multiclass/train/
+Weapons.v2i.multiclass/valid/
 
 # Fichiers des modèles
 *.h5
