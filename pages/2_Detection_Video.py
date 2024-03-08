@@ -4,9 +4,14 @@ import tempfile
 import os
 import cv2
 import numpy as np
+from tensorflow.keras.models import load_model
 
 net = cv2.dnn.readNet("dataset/yolov3.weights", "dataset/yolov3_t.cfg")
-classes = ["Weapons"]  # Mettez vos classes dans une liste
+
+# Définir les catégories de classe
+classes = ['Gun', 'Knife', 'Rifle']
+
+model = load_model("Notebook/inceptionv3_model.h5")
 
 # Définir le titre et l'icône de la page
 st.set_page_config(
@@ -19,9 +24,6 @@ st.write("# Vidéos")
 
 # Ajouter le composant d'upload de fichier
 upload_video = st.file_uploader("Choisissez une vidéo", type=["mp4", "avi", "mov"])
-
-# Définir la confiance minimale pour l'affichage de la détection
-min_confidence = st.slider("Confiance minimale", 0.0, 1.0, 0.5)
 
 # Définir les coordonnées du rectangle (x, y, largeur, hauteur)
 #rectangle_coordinates = st.text_input("Coordonnées du rectangle (x, y, largeur, hauteur)", "100, 100, 100, 100")
