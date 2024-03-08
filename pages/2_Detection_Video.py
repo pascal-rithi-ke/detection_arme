@@ -2,9 +2,9 @@ import streamlit as st
 import cv2
 import numpy as np
 
-net = cv2.dnn.readNet("dataset/yolov3.weights", "dataset/yolov3.cfg")
+net = cv2.dnn.readNet("dataset/yolov3.weights", "dataset/yolov3_t.cfg")
 
-classes = ["Knife", "Pistol", "Rifle"]
+classes = "Weapons"
 
 # Définir le titre et l'icône de la page
 st.set_page_config(
@@ -32,7 +32,7 @@ def perform_detection(frame):
             class_id = np.argmax(scores)
             confidence = scores[class_id]
 
-            if confidence > 0.5:
+            if confidence > 0.1:
                 # Extract detection details
                 center_x = int(detection[0] * frame.shape[1])
                 center_y = int(detection[1] * frame.shape[0])
@@ -44,7 +44,12 @@ def perform_detection(frame):
 
                 # Draw a box and label on the frame
                 cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
-                label = f"{classes[class_id]}: {confidence:.2f}"
+
+                # Get the class name from the list
+                class_name = classes[class_id]
+
+                # Add class name to label
+                label = f"{class_name}: {confidence:.2f}"
                 cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     return frame
 
