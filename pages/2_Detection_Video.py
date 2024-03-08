@@ -38,12 +38,11 @@ if upload_video is not None:
     st.write(f"Nombre total de frames : {total_frames}")
 
     # Ajouter un slider pour choisir le nombre de frames à afficher
-    num_frames = st.slider("Nombre de frames à afficher", 1, total_frames, 1)
+    #num_frames = st.slider("Nombre de frames à afficher", 1, total_frames, 1)
 
     # Créer un élément Streamlit pour afficher la vidéo
     video_placeholder = st.empty()
 
-    # Lire la vidéo frame par frame
     for i in range(total_frames):
         # Récupérer la frame
         frame = video_clip.get_frame(i / video_clip.fps)
@@ -83,7 +82,8 @@ if upload_video is not None:
         # Afficher la vidéo dans Streamlit avec le rectangle superposé
         video_placeholder.image(frame, channels="RGB", caption=f"Frame {i + 1}")
 
-    video_clip.close()
+    if video_clip:
+        video_clip.close()
 
     # Supprimer la copie temporaire avec gestion d'erreur de permission
     try:
