@@ -1,4 +1,7 @@
 Dataset Info
+*video_test
+dataset_yolo/yolov3.weights
+
 # Fichiers des modèles
 *.h5
 

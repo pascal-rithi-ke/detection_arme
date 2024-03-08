@@ -1,17 +1,20 @@
 import streamlit as st
-from moviepy.video.io.VideoFileClip import VideoFileClip
-import tempfile
-import os
 import cv2
 import numpy as np
-from tensorflow.keras.models import load_model
+import tempfile
+import os
 
-net = cv2.dnn.readNet("dataset/yolov3.weights", "dataset/yolov3_t.cfg")
+# Charger le modèle YOLO
+net = cv2.dnn.readNet("dataset_yolo/yolov3.weights", "dataset_yolo/yolov3.cfg")
 
-# Définir les catégories de classe
-classes = ['Gun', 'Knife', 'Rifle']
+# Configurer les paramètres d'entraînement
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
-model = load_model("Notebook/inceptionv3_model.h5")
+# Charger les classes
+classes = []
+with open("dataset_yolo/classes.txt", "r") as f:
+    classes = [line.strip() for line in f]
 
 # Définir le titre et l'icône de la page
 st.set_page_config(
@@ -25,50 +28,60 @@ st.write("# Vidéos")
 # Ajouter le composant d'upload de fichier
 upload_video = st.file_uploader("Choisissez une vidéo", type=["mp4", "avi", "mov"])
 
-# Définir les coordonnées du rectangle (x, y, largeur, hauteur)
-#rectangle_coordinates = st.text_input("Coordonnées du rectangle (x, y, largeur, hauteur)", "100, 100, 100, 100")
-rectangle_coordinates = ("100, 100, 100, 100")
-rectangle_coordinates = [int(coord) for coord in rectangle_coordinates.split(",")]
-
-frame_container = st.empty()
-
-# Si une vidéo est uploadée
+# Si un fichier a été uploadé
 if upload_video is not None:
-    # Créer une copie temporaire de la vidéo
-    temp_video_path = os.path.join(tempfile.gettempdir(), "temp_video.mp4")
-    with open(temp_video_path, "wb") as temp_video:
-        temp_video.write(upload_video.read())
+    # Enregistrer le fichier uploader dans un répertoire temporaire
+    temp_dir = tempfile.TemporaryDirectory()
+    video_path = os.path.join(temp_dir.name, "uploaded_video.mp4")
+    with open(video_path, "wb") as video_file:
+        video_file.write(upload_video.read())
 
-    # Utiliser MoviePy pour obtenir les frames de la vidéo
-    video_clip = VideoFileClip(temp_video_path)
+    # Lire la vidéo à l'aide d'OpenCV
+    video_capture = cv2.VideoCapture(video_path)
 
-    # Afficher le nombre total de frames
-    total_frames = int(video_clip.fps * video_clip.duration)
-    st.write(f"Nombre total de frames : {total_frames}")
+    # Définir la taille de la fenêtre de la vidéo
+    width = int(video_capture.get(3))
+    height = int(video_capture.get(4))
+
+    # Créer un élément Streamlit pour afficher la vidéo
+    video_placeholder = st.empty()
 
     # Lire la vidéo frame par frame
-    for i in range(1, total_frames + 1):
-        # Récupérer la frame
-        frame = video_clip.get_frame(i / video_clip.fps)
+    while video_capture.isOpened():
+        ret, frame = video_capture.read()
+        if not ret:
+            break
 
-        # Convertir la frame en UMat
-        frame = cv2.UMat(np.array(frame))
+        # Créer un blob à partir de l'image
+        blob = cv2.dnn.blobFromImage(frame, 1/255, (416, 416), (0, 0, 0), True, crop=False)
+        net.setInput(blob)
 
-        # Dessiner le rectangle sur la frame
-        x, y, w, h = rectangle_coordinates
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        cv2.putText(frame, "Weapon", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-        cv2.putText(frame, f"Frame {i}", (100, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        layer_names = net.getUnconnectedOutLayersNames()
+        detections = net.forward(layer_names)
 
-        frame_container.image(frame.get(), channels="BGR")
+        # Post-traitement des détections
+        for obj in detections[0]:
+            scores = obj[5:]
+            class_id = np.argmax(scores)
+            confidence = scores[class_id]
 
-    if video_clip:
-        video_clip.close()
+            if confidence > 0.5:
+                center_x = int(obj[0] * width)
+                center_y = int(obj[1] * height)
+                w = int(obj[2] * width)
+                h = int(obj[3] * height)
 
-    # Supprimer la copie temporaire avec gestion d'erreur de permission
-    try:
-        os.remove(temp_video_path)
-    except PermissionError:
-        st.warning("Erreur de suppression du fichier temporaire. Il peut être utilisé par un autre processus.")
-else:
-    st.warning("Veuillez choisir une vidéo")
+                x = int(center_x - w/2)
+                y = int(center_y - h/2)
+
+                # Dessiner un rectangle autour de l'objet détecté
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                cv2.putText(frame, f"{classes[class_id]}: {confidence:.2f}", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+        # Afficher la vidéo dans Streamlit avec le rectangle superposé
+        video_placeholder.image(frame, channels="BGR")
+
+    # Libérer la ressource vidéo
+    video_capture.release()
+    # Supprimer le répertoire temporaire
+    temp_dir.cleanup()

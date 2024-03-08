@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 
 # Charger le modèle CNN pré-entraîné
-model = load_model('C:/Users/33749/Desktop/IPSSI/MachineLearning_DeepLearning/Projet_Detection_Arme/detection_arme/Notebook/inceptionv3_model.h5')
+model = load_model('Notebook/model.h5')
 
 # Définir les catégories de classe
 classes = ['Gun', 'Knife', 'Rifle']
