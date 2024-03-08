@@ -4,10 +4,9 @@ import tempfile
 import os
 import cv2
 import numpy as np
-from shutil import copy
 
 net = cv2.dnn.readNet("dataset/yolov3.weights", "dataset/yolov3_t.cfg")
-classes = "Weapons"
+classes = ["Weapons"]  # Mettez vos classes dans une liste
 
 # Définir le titre et l'icône de la page
 st.set_page_config(
@@ -41,46 +40,48 @@ if upload_video is not None:
     # Ajouter un slider pour choisir le nombre de frames à afficher
     num_frames = st.slider("Nombre de frames à afficher", 1, total_frames, 1)
 
-    # Afficher les frames
-    if total_frames > 0:
-        for i in range(num_frames):
-            # Récupérer la frame
-            frame = video_clip.get_frame(i / video_clip.fps)
+    # Créer un élément Streamlit pour afficher la vidéo
+    video_placeholder = st.empty()
 
-            # Effectuer la détection d'objet
-            blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
-            net.setInput(blob)
-            outs = net.forward(net.getUnconnectedOutLayersNames())
+    # Lire la vidéo frame par frame
+    for i in range(total_frames):
+        # Récupérer la frame
+        frame = video_clip.get_frame(i / video_clip.fps)
 
-            # Process YOLO output
-            for out in outs:
-                for detection in out:
-                    scores = detection[5:]
-                    class_id = np.argmax(scores)
-                    confidence = scores[class_id]
+        # Effectuer la détection d'objet
+        blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+        net.setInput(blob)
+        outs = net.forward(net.getUnconnectedOutLayersNames())
 
-                    if confidence > min_confidence:
-                        # Extract detection details
-                        center_x = int(detection[0] * frame.shape[1])
-                        center_y = int(detection[1] * frame.shape[0])
-                        width = int(detection[2] * frame.shape[1])
-                        height = int(detection[3] * frame.shape[0])
+        # Process YOLO output
+        for out in outs:
+            for detection in out:
+                scores = detection[5:]
+                class_id = np.argmax(scores)
+                confidence = scores[class_id]
 
-                        x = int(center_x - width / 2)
-                        y = int(center_y - height / 2)
+                if confidence > min_confidence:
+                    # Extract detection details
+                    center_x = int(detection[0] * frame.shape[1])
+                    center_y = int(detection[1] * frame.shape[0])
+                    width = int(detection[2] * frame.shape[1])
+                    height = int(detection[3] * frame.shape[0])
 
-                        # Draw a box and label on the frame
-                        cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
+                    x = int(center_x - width / 2)
+                    y = int(center_y - height / 2)
 
-                        # Get the class name from the list
-                        class_name = classes[class_id]
+                    # Draw a box and label on the frame
+                    cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
 
-                        # Add class name to label
-                        label = f"{class_name}: {confidence:.2f}"
-                        cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    # Get the class name from the list
+                    class_name = classes[class_id]
 
-            # Afficher chaque frame avec une légende
-            st.image(frame, channels="RGB", caption=f"Frame {i + 1}")
+                    # Add class name to label
+                    label = f"{class_name}: {confidence:.2f}"
+                    cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+        # Afficher la vidéo dans Streamlit avec le rectangle superposé
+        video_placeholder.image(frame, channels="RGB", caption=f"Frame {i + 1}")
 
     video_clip.close()
 
