@@ -1,5 +1,13 @@
 # Détection d'armes
 
+Ce projet a pour but de détecter des armes dans des images et des vidéos. Il utilise un réseau de neurones convolutif (CNN) pour la classification d'images et YOLO pour la détection d'objets en temps réel.
+
+## Fonctionnalités
+
+- Classification d'images
+- Détection d'objets en temps réel
+- Interface utilisateur avec Streamlit
+
 ## Installation
 
 Avant de lancer l'application, assurez-vous que vous avez Python (minimum 3.8) d'installé.
@@ -33,3 +41,5 @@ streamlit run Accueil.py
 ```
 
 Ouvrez votre navigateur et allez à l'adresse http://localhost:8501 pour voir l'application.
+
+Pour quitter, appuyez sur `Ctrl + C` dans votre terminal. Vous pouvez quitter l'environnement virtuel avec la commande `deactivate`.
