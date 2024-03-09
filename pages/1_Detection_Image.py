@@ -3,18 +3,23 @@ import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
 
-# Charger le modèle CNN pré-entraîné
-model = load_model('Notebook/model.h5')
-
-# Définir les catégories de classe
-classes = ['Gun', 'Knife', 'Rifle']
-
 st.set_page_config(
     page_title="Images - Détection d'armes",
     page_icon="📸",
 )
 
-st.write("# Images")
+st.title("Images")
+
+# Charger le modèle CNN pré-entraîné
+@st.cache_resource
+def load_pred_model():
+    model = load_model('Notebook/model.h5')
+    return model
+
+model = load_pred_model()
+
+# Définir les catégories de classe
+classes = ['Gun', 'Knife', 'Rifle']
 
 uploaded_image = st.file_uploader("Choisissez une image...", type=["jpg", "jpeg", "png"])
 if uploaded_image is not None:
