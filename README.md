@@ -2,6 +2,8 @@
 
 Ce projet a pour but de détecter des armes dans des images et des vidéos. Il utilise un réseau de neurones convolutif (CNN) pour la classification d'images et YOLO pour la détection d'objets en temps réel.
 
+![Exemple](./assets/video_detect_gun.gif)
+
 ## Fonctionnalités
 
 - Classification d'images
